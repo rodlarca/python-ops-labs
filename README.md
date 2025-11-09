@@ -7,3 +7,9 @@ Este repositorio contiene scripts de prueba para distintos servicios.
 | Script | Descripción |
 |--------|-------------|
 | [slack_send_message.py](slack_send_message.py) | Envía un mensaje a un canal Slack mediante Webhook |
+
+## OpenAI
+
+| Script | Descripción |
+|--------|-------------|
+| [slack_send_message.py](slack_send_message.py) | Envía un mensaje a un canal Slack mediante Webhook |
