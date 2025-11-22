@@ -8,6 +8,7 @@ Este repositorio contiene scripts de prueba para distintos servicios.
 |--------|-------------|
 | [slack_send_message.py](slack_send_message.py) | Envía un mensaje a un canal Slack mediante Webhook.|
 | [openai_cost_estimator.py](openai_cost_estimator.py) | Este script ejecuta una llamada a la API de OpenAI y calcula el costo estimado de la consulta en base al uso de tokens.|
+| [sftp_last_file.py](sftp_last_file.py) | Se conecta a un servidor SFTP usando variables de entorno y muestra en una sola línea el archivo más reciente, su fecha de modificación y la fecha del servidor donde se ejecuta el script.|
 
 ## Data science
 
