@@ -5,11 +5,10 @@ from datetime import datetime
 
 load_dotenv()
 
-host = os.getenv("VTR_GUIA_HOST")
-port = int(os.getenv("VTR_GUIA_PORT"))
-username = os.getenv("VTR_GUIA_USER")
-password = os.getenv("VTR_GUIA_PASS")
-
+host = os.getenv("VG_HOST")
+port = int(os.getenv("VG_PORT"))
+username = os.getenv("VG_USER")
+password = os.getenv("VG_PASS")
 
 def show_last_file():
     try:
