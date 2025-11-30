@@ -10,6 +10,8 @@ Este repositorio contiene scripts de prueba para distintos servicios.
 | [openai_cost_estimator.py](openai_cost_estimator.py) | Este script ejecuta una llamada a la API de OpenAI y calcula el costo estimado de la consulta en base al uso de tokens.|
 | [sftp_last_file.py](sftp_last_file.py) | Se conecta a un servidor SFTP usando variables de entorno y muestra en una sola línea el archivo más reciente, su fecha de modificación y la fecha del servidor donde se ejecuta el script.|
 | [system_monitor.py](system_monitor.py) | Obtiene métricas del sistema (CPU, RAM, disco, red) y envía alertas a Slack si se superan umbrales.|
+| [generate_fake_logs.py](generate_fake_logs.py) | Genera un archivo `app.log` con líneas sintéticas de INFO, WARNING y ERROR para pruebas de análisis. |
+| [log_error_summary.py](log_error_summary.py) | Lee `app.log`, cuenta niveles (ERROR, WARNING, INFO) y genera un resumen en consola y un CSV. |
 
 ## Data science
 
