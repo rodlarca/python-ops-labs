@@ -52,6 +52,14 @@ def save_to_csv(counts: Counter, output_path: str) -> None:
         for level, count in counts.items():
             writer.writerow([level, count])
 
+def color(text, level):
+    if level == "ERROR":
+        return f"\033[91m{text}\033[0m"   # rojo
+    if level == "WARNING":
+        return f"\033[93m{text}\033[0m"  # amarillo
+    if level == "INFO":
+        return f"\033[92m{text}\033[0m"  # verde
+    return text
 
 def main():
     print(f"[INFO] Analizando archivo de log: {LOG_FILE}")
@@ -59,7 +67,7 @@ def main():
 
     print("\n=== Resumen de niveles detectados ===")
     for level, count in counts.items():
-        print(f"{level}: {count}")
+        print(color(f"{level}: {count}", level))
 
     save_to_csv(counts, OUTPUT_FILE)
     print(f"\n[INFO] Resumen guardado en: {OUTPUT_FILE}")
