@@ -16,14 +16,13 @@ OUTPUT_FILE = "log_summary.csv" # <-- nombre fijo del output
 
 
 def analyze_log_file(log_path: str) -> Counter:
-    """
-    Analiza un archivo de log y cuenta ocurrencias de:
-    - ERROR
-    - WARNING
-    - INFO
-    """
     if not os.path.exists(log_path):
-        raise FileNotFoundError(f"El archivo de log no existe: {log_path}")
+        print(f"[ERROR] El archivo {log_path} no existe.")
+        return Counter()
+
+    if os.stat(log_path).st_size == 0:
+        print(f"[WARNING] El archivo {log_path} está vacío.")
+        return Counter()
 
     levels = Counter({"ERROR": 0, "WARNING": 0, "INFO": 0})
 
@@ -36,6 +35,9 @@ def analyze_log_file(log_path: str) -> Counter:
                 levels["WARNING"] += 1
             if "INFO" in upper_line:
                 levels["INFO"] += 1
+
+    if all(count == 0 for count in levels.values()):
+        print("[INFO] No se detectaron registros de ERROR, WARNING ni INFO.")
 
     return levels
 
