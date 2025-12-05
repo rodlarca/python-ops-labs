@@ -20,6 +20,8 @@ Este repositorio contiene scripts de prueba para distintos servicios.
 |--------|-------------|
 | [pandas_scikit.py](data_science/pandas_scikit.py) | Pipeline Pandas + Scikit-learn: imputación, ColumnTransformer, RandomForest y métricas MAE/MSE/R². [Artículo original en KDnuggets](https://www.kdnuggets.com/from-dataset-to-dataframe-to-deployed-your-first-project-with-pandas-scikit-learn)|
 | [data_analysis_with_polars.py](data_science/data_analysis_with_polars.py) | Análisis con Polars: generación de dataset sintético, agregaciones, métricas de ventas, ranking de productos y resumen de negocio. [Artículo original en KDnuggets](https://www.kdnuggets.com/beginners-guide-to-data-analysis-with-polars)|
+| [remote_docker_status.py](remote_docker_status.py) | Se conecta por SSH a un servidor Linux remoto, lista contenedores Docker y envía el estado a Slack. |
+
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![Status](https://img.shields.io/badge/status-active-success)
