@@ -76,21 +76,41 @@ def main():
         print("No se pudo obtener información del almacenamiento.")
         return
 
-    alert_triggered = False
-    msg = "📦 *Estado de Storage en servidor remoto:*\n"
+    critical = []
+    normal = []
 
     for fs, used, mount in filesystems:
-        msg += f"- {mount}: {used}% usado\n"
+        if any(excluded in fs for excluded in ["tmpfs", "udev", "overlay"]):
+            continue  # Saltar sistemas temporales o virtuales
+
+        entry = f"{mount}: {used}%"
+
         if used > THRESHOLD:
-            alert_triggered = True
+            critical.append(entry)
+        else:
+            normal.append(entry)
 
-    print(msg)
+    # Construcción del mensaje corporativo
+    host_info = f"📍 Servidor: `{SSH_HOST}`"
+    header = "📦 *Estado de Storage*"
+    
+    details = "\n".join(
+        [f"🔴 {e}" for e in critical] + 
+        [f"🟢 {e}" for e in normal]
+    )
 
-    if alert_triggered:
-        send_slack_alert(f"⚠️ Storage crítico:\n{msg}")
+    message = f"{header}\n{host_info}\n\n{details}"
+
+    print(message)
+
+    # Alertar solo si hay problemas
+    if critical:
+        send_slack_alert(
+            f"⚠️ *Alerta de almacenamiento crítico*\n{host_info}\n\n" +
+            "\n".join(f"🔴 {e}" for e in critical)
+        )
     else:
-        print("Todo OK 👍")
-
+        print("Sin alertas. Todo OK 👍")
 
 if __name__ == "__main__":
     main()
