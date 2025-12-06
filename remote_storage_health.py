@@ -10,14 +10,12 @@ supera el 80% de uso.
 import os
 import paramiko
 import requests
+import yaml
 from dotenv import load_dotenv
 
 load_dotenv()
 
-SSH_HOST = os.getenv("SSH_MARCHIGUE_HOST")
-SSH_USER = os.getenv("SSH_MARCHIGUE_USER")
-SSH_PASSWORD = os.getenv("SSH_MARCHIGUE_PASSWORD")
-SSH_PORT = int(os.getenv("SSH_MARCHIGUE_PORT", "22"))
+CONFIG_FILE = os.getenv("STORAGE_CONFIG_FILE", "servers_storage.yaml")
 
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 THRESHOLD = float(os.getenv("STORAGE_THRESHOLD", "80"))
@@ -35,17 +33,17 @@ def send_slack_alert(message: str):
         print(f"[ERROR] No se pudo enviar alerta Slack: {e}")
 
 
-def get_remote_storage_status():
+def get_remote_storage_status(host: str, user: str, password: str, port: int = 22):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
-        print(f"[INFO] Conectando a {SSH_USER}@{SSH_HOST}:{SSH_PORT}")
+        print(f"[INFO] Conectando a {user}@{host}:{port}")
         client.connect(
-            hostname=SSH_HOST,
-            port=SSH_PORT,
-            username=SSH_USER,
-            password=SSH_PASSWORD,
+            hostname=host,
+            port=port,
+            username=user,
+            password=password,
             timeout=10,
         )
 
@@ -53,7 +51,7 @@ def get_remote_storage_status():
         output = stdout.read().decode().strip()
         client.close()
     except Exception as e:
-        print(f"[ERROR] Fallo al conectar o ejecutar comando: {e}")
+        print(f"[ERROR] Fallo al conectar o ejecutar comando en {host}: {e}")
         return []
 
     lines = output.splitlines()[1:]
@@ -68,49 +66,75 @@ def get_remote_storage_status():
 
     return filesystems
 
+def load_servers_from_yaml():
+    if not os.path.exists(CONFIG_FILE):
+        print(f"[ERROR] No se encontró archivo de configuración: {CONFIG_FILE}")
+        return []
+
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    return data.get("servers", [])
 
 def main():
-    filesystems = get_remote_storage_status()
+    servers = load_servers_from_yaml()
 
-    if not filesystems:
-        print("No se pudo obtener información del almacenamiento.")
+    if not servers:
+        print("No hay servidores definidos en el archivo YAML.")
         return
 
-    critical = []
-    normal = []
+    for server in servers:
+        name = server.get("name", "Servidor sin nombre")
+        host = server.get("host")
+        user = server.get("user")
+        password = server.get("password")
+        port = int(server.get("port", 22))
+        threshold = float(server.get("threshold", THRESHOLD))
 
-    for fs, used, mount in filesystems:
-        if any(excluded in fs for excluded in ["tmpfs", "udev", "overlay"]):
-            continue  # Saltar sistemas temporales o virtuales
+        if not host or not user or not password:
+            print(f"[WARNING] Servidor '{name}' tiene configuración incompleta, se omite.")
+            continue
 
-        entry = f"{mount}: {used}%"
+        print(f"\n===== Revisando storage en: {name} ({host}) =====")
+        filesystems = get_remote_storage_status(host, user, password, port)
 
-        if used > THRESHOLD:
-            critical.append(entry)
-        else:
-            normal.append(entry)
+        if not filesystems:
+            print(f"No se pudo obtener información de almacenamiento para {name}.")
+            continue
 
-    # Construcción del mensaje corporativo
-    host_info = f"📍 Servidor: `{SSH_HOST}`"
-    header = "📦 *Estado de Storage*"
-    
-    details = "\n".join(
-        [f"🔴 {e}" for e in critical] + 
-        [f"🟢 {e}" for e in normal]
-    )
+        critical = []
+        normal = []
 
-    message = f"{header}\n{host_info}\n\n{details}"
+        for fs, used, mount in filesystems:
+            if any(excluded in fs for excluded in ["tmpfs", "udev", "overlay"]):
+                continue
 
-    print(message)
+            entry = f"{mount}: {used}%"
 
-    # Alertar solo si hay problemas
-    if critical:
-        send_slack_alert(
-            f"⚠️ *Alerta de almacenamiento crítico*\n{host_info}\n\n" +
-            "\n".join(f"🔴 {e}" for e in critical)
+            if used > threshold:
+                critical.append(entry)
+            else:
+                normal.append(entry)
+
+        host_info = f"📍 Servidor: `{host}` ({name})"
+        header = "📦 *Estado de Storage*"
+
+        details = "\n".join(
+            [f"🔴 {e}" for e in critical] +
+            [f"🟢 {e}" for e in normal]
         )
-    else:
-        print("Sin alertas. Todo OK 👍")
+
+        message = f"{header}\n{host_info}\n\n{details}"
+        print(message)
+
+        if critical:
+            send_slack_alert(
+                f"⚠️ *Alerta de almacenamiento crítico*\n{host_info}\n\n" +
+                "\n".join(f"🔴 {e}" for e in critical)
+            )
+        else:
+            print("Sin alertas para este servidor. Todo OK 👍")
+
 
 if __name__ == "__main__":
     main()
