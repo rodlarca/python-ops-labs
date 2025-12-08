@@ -121,16 +121,31 @@ def summarize_log_content(log_content: str) -> dict[str, int]:
 
 
 def build_console_report(server_name: str, host: str, log_label: str, log_path: str, summary: dict[str, int]) -> str:
-    """Construye un reporte legible para consola."""
+    """Construye un reporte legible para consola, usando colores según severidad."""
+    RED = "\033[31m"
+    YELLOW = "\033[33m"
+    GREEN = "\033[32m"
+    CYAN = "\033[36m"
+    RESET = "\033[0m"
+
+    header = f"{CYAN}===== Resumen de log remoto: {server_name} ({host}) ====={RESET}"
+    log_info = f"Log: {log_label} ({log_path})"
+    lines_count = f"Líneas analizadas: {summary['TOTAL_LINES']}"
+
+    error_line = f"{RED}ERROR:   {summary['ERROR']}{RESET}"
+    warning_line = f"{YELLOW}WARNING: {summary['WARNING']}{RESET}"
+    info_line = f"{GREEN}INFO:    {summary['INFO']}{RESET}"
+
     report = [
-        f"===== Resumen de log remoto: {server_name} ({host}) =====",
-        f"Log: {log_label} ({log_path})",
-        f"Líneas analizadas: {summary['TOTAL_LINES']}",
-        f"ERROR:   {summary['ERROR']}",
-        f"WARNING: {summary['WARNING']}",
-        f"INFO:    {summary['INFO']}",
+        header,
+        log_info,
+        lines_count,
+        error_line,
+        warning_line,
+        info_line,
     ]
     return "\n".join(report)
+
 
 
 def build_slack_message(server_name: str, host: str, log_label: str, log_path: str, summary: dict[str, int]) -> str:
