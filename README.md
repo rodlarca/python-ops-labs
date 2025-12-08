@@ -15,6 +15,8 @@ Este repositorio contiene scripts de prueba para distintos servicios.
 | [system_metrics_exporter.py](system_metrics_exporter.py) | Obtiene métricas del sistema (CPU, RAM, disco) y envía el resumen a Slack en una sola ejecución. |
 | [remote_docker_status.py](remote_docker_status.py) | Se conecta por SSH a un servidor Linux remoto, lista contenedores Docker y envía el estado a Slack. |
 | [remote_storage_health.py](remote_storage_health.py) | Monitorea el uso de almacenamiento en servidores remotos vía SSH desde un archivo YAML y envía alertas a Slack si se superan umbrales configurables. |
+| [remote_log_error_summary.py](remote_log_error_summary.py) | Se conecta vía SSH a servidores Linux, analiza `/var/log/messages` buscando errores y envía alertas a Slack si hay problemas detectados. |
+
 
 
 ## Data science
