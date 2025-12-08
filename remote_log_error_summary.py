@@ -11,7 +11,11 @@ import os
 import paramiko
 import requests
 import yaml
+import csv
+from datetime import datetime
 from dotenv import load_dotenv
+
+OUTPUT_DIR = "archivos"
 
 load_dotenv()
 
@@ -19,6 +23,42 @@ SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 CONFIG_FILE = os.getenv("LOGS_CONFIG_FILE", "logs_monitor.yaml")
 TAIL_LINES = int(os.getenv("LOG_TAIL_LINES", "200"))
 LOG_TIME_RANGE = os.getenv("LOG_TIME_RANGE", "").strip()  # "", "1h", "24h"
+
+def save_errors_to_csv(host: str, log_content: str):
+    """Guarda solo las líneas con ERROR en un archivo CSV dentro de OUTPUT_DIR."""
+
+    if not log_content:
+        return
+
+    # Asegura que el directorio exista
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    rows = []
+    for line in log_content.splitlines():
+        if "ERROR" in line.upper():
+            rows.append([datetime.now().isoformat(), line.strip()])
+
+    if not rows:
+        return
+
+    filename = f"error_logs_{host.replace('.', '_')}.csv"
+    filepath = os.path.join(OUTPUT_DIR, filename)
+
+    try:
+        file_exists = os.path.isfile(filepath)
+
+        with open(filepath, "a", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+
+            if not file_exists:
+                writer.writerow(["timestamp", "message"])
+
+            writer.writerows(rows)
+
+        print(f"[OK] {len(rows)} errores guardados en {filepath}")
+
+    except Exception as e:
+        print(f"[ERROR] No se pudo guardar el archivo CSV: {e}")
 
 
 
@@ -197,6 +237,7 @@ def main():
         log_content = fetch_log_tail(host, user, password, log_path, port)
 
         summary = summarize_log_content(log_content)
+        save_errors_to_csv(host, log_content)
 
         # Consola
         report = build_console_report(name, host, log_label, log_path, summary)

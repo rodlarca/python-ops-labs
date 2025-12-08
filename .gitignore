@@ -2,3 +2,9 @@
 system_monitor/
 servers_storage.yaml
 logs_monitor.yaml
+
+# No subir archivos sensibles con información de conexión
+*.yaml
+
+# No subir archivos CSV generados por scripts
+archivos/
