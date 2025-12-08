@@ -18,6 +18,8 @@ load_dotenv()
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 CONFIG_FILE = os.getenv("LOGS_CONFIG_FILE", "logs_monitor.yaml")
 TAIL_LINES = int(os.getenv("LOG_TAIL_LINES", "200"))
+LOG_TIME_RANGE = os.getenv("LOG_TIME_RANGE", "").strip()  # "", "1h", "24h"
+
 
 
 def send_slack_message(message: str) -> None:
@@ -57,8 +59,9 @@ def load_servers_from_yaml():
 
 def fetch_log_tail(host: str, user: str, password: str, log_path: str, port: int = 22) -> str:
     """
-    Se conecta por SSH y obtiene las últimas N líneas de un log usando `tail -n`.
-    Devuelve el contenido como string.
+    Se conecta por SSH y obtiene el contenido del log remoto.
+    Si LOG_TIME_RANGE está definido (por ejemplo '1h' o '24h'), intenta usar journalctl
+    para filtrar por rango de tiempo. En caso contrario, usa `tail -n` sobre el archivo.
     """
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -73,7 +76,17 @@ def fetch_log_tail(host: str, user: str, password: str, log_path: str, port: int
             timeout=10,
         )
 
-        cmd = f"tail -n {TAIL_LINES} {log_path}"
+        # Elegir comando según rango de tiempo
+        if LOG_TIME_RANGE == "1h":
+            print("[INFO] Analizando logs de la última hora usando journalctl.")
+            cmd = "journalctl --since '1 hour ago'"
+        elif LOG_TIME_RANGE == "24h":
+            print("[INFO] Analizando logs del último día usando journalctl.")
+            cmd = "journalctl --since '1 day ago'"
+        else:
+            # Comportamiento original: leer últimas N líneas del archivo
+            cmd = f"tail -n {TAIL_LINES} {log_path}"
+
         stdin, stdout, stderr = client.exec_command(cmd)
 
         output = stdout.read().decode(errors="ignore")
@@ -89,7 +102,6 @@ def fetch_log_tail(host: str, user: str, password: str, log_path: str, port: int
         return ""
     finally:
         client.close()
-
 
 def summarize_log_content(log_content: str) -> dict[str, int]:
     """
