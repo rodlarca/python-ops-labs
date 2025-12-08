@@ -1,3 +1,4 @@
 .env
 system_monitor/
 servers_storage.yaml
+logs_monitor.yaml
